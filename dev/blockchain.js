@@ -3,7 +3,8 @@ const crypto = require("crypto-js");
 //class function of the blockchain
 function Blockchain(){
     this.chain = [],
-    this.newTransactions = []
+    this.newTransactions = [];
+    this.createNewBlock(100, '0', '0');
 }
  Blockchain.prototype.createNewBlock = function (nonce, previousBlockHash, Hash){
      const newBlock = {
@@ -37,5 +38,18 @@ function Blockchain(){
     const hash = crypto.SHA256(dataBlock);
     return hash.toString();
  };
+
+
+ Blockchain.prototype.proofOfWork = function(previousBlockHash, currentBlockData){
+     const dataBlock = previousBlockHash + JSON.stringify(currentBlockData);
+     let nonce = 0;
+     let hash = this.hashBlock(previousBlockHash, currentBlockData, nonce);
+     while(hash.substring(0, 4) !== '0000'){
+         nonce++;
+         hash = this.hashBlock(previousBlockHash, currentBlockData, nonce);
+     }
+     return hash;
+ };
+
 
 module.exports = Blockchain;
