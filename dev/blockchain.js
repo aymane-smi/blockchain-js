@@ -1,3 +1,5 @@
+const crypto = require("crypto-js");
+
 //class function of the blockchain
 function Blockchain(){
     this.chain = [],
@@ -22,7 +24,18 @@ function Blockchain(){
  };
 
  Blockchain.prototype.createNewTransaction = function(amount, sender, recipient){
+    const newTransaction = {
+        amount,
+        sender,
+        recipient
+    };
+    this.newTransactions.push(newTransaction);
+ };
 
+ Blockchain.prototype.hashBlock = function(previousBlockHash, currentBlockData, nonce){
+    const dataBlock = previousBlockHash + nonce.toString() + JSON.stringify(currentBlockData);
+    const hash = crypto.SHA256(dataBlock);
+    return hash.toString();
  };
 
 module.exports = Blockchain;
