@@ -31,6 +31,7 @@ function Blockchain(){
         recipient
     };
     this.newTransactions.push(newTransaction);
+    return this.getLastBlock()['index'] + 1;
  };
 
  Blockchain.prototype.hashBlock = function(previousBlockHash, currentBlockData, nonce){
@@ -48,7 +49,7 @@ function Blockchain(){
          nonce++;
          hash = this.hashBlock(previousBlockHash, currentBlockData, nonce);
      }
-     return hash;
+     return nonce;
  };
 
 
