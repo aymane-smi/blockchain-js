@@ -2,9 +2,14 @@
   "name": "blockchain",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "node_1" : "nodemon --trace-warnings --watch dev -e js app.js 8081 http://localhost/8081/",
+    "node_2" : "nodemon --experimental-fetch --watch dev -e js app.js 3000 http://localhost:3000/",
+    "node_3" : "nodemon --experimental-fetch --watch dev -e js app.js 3001 http://localhost:3001/",
+    "node_4" : "nodemon --experimental-fetch --watch dev -e js app.js 3002 http://localhost:3002/",
+    "node_5" : "nodemon --experimental-fetch --watch dev -e js app.js 3003 http://localhost:3003/"
   },
   "author": "aymane",
   "license": "ISC",

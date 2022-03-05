@@ -1,9 +1,11 @@
-const crypto = require("crypto-js");
-
+const crypto         = require("crypto-js")
+      currentNodeUrl = process.argv[3];
 //class function of the blockchain
 function Blockchain(){
-    this.chain = [],
+    this.chain = [];
     this.newTransactions = [];
+    this.currentNodeUrl = currentNodeUrl;
+    this.networkNodes = [];
     this.createNewBlock(100, '0', '0');
 }
  Blockchain.prototype.createNewBlock = function (nonce, previousBlockHash, Hash){
