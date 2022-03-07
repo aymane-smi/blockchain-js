@@ -5,19 +5,21 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "node_1" : "nodemon --trace-warnings --watch dev -e js app.js 8081 http://localhost/8081/",
-    "node_2" : "nodemon --experimental-fetch --watch dev -e js app.js 3000 http://localhost:3000/",
-    "node_3" : "nodemon --experimental-fetch --watch dev -e js app.js 3001 http://localhost:3001/",
-    "node_4" : "nodemon --experimental-fetch --watch dev -e js app.js 3002 http://localhost:3002/",
-    "node_5" : "nodemon --experimental-fetch --watch dev -e js app.js 3003 http://localhost:3003/"
+    "node_1": "nodemon --watch controllers -e js app.js 3000 http://localhost:3000",
+    "node_2": "nodemon --watch controllers -e js app.js 3001 http://localhost:3001",
+    "node_3": "nodemon --watch controllers -e js app.js 3002 http://localhost:3002"
   },
   "author": "aymane",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.19.2",
+    "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "crypto-js": "^4.1.1",
     "express": "^4.17.3",
+    "node-fetch": "^3.2.1",
+    "request-promise": "^4.2.6",
+    "undici": "^4.15.0",
     "uuid": "^8.3.2"
   }
 }
