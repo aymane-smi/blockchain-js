@@ -1,3 +1,5 @@
+const { request } = require('http');
+
 const Blockchain        = require('../dev/blockchain'),
       bitcoin           = new Blockchain(),
       {v4 : uuid}       = require('uuid'),
@@ -14,17 +16,19 @@ exports.Blockchain = (req, res)=>{
 };
 
 exports.Transaction = (req, res)=>{
-    const {amount, sender, recipient} = req.body;
-    const BlockIndex = bitcoin.createNewTransaction(amount, sender, recipient);
-    if(!amount || !sender || !recipient)
+    const {newTransaction} = req.body;
+    console.log(newTransaction);
+    if(!newTransaction)
         res.status(401).json({
             message: "can't create a transaction!"
         });
-    res.status(200).json({
-        amount,
-        sender, recipient,
-        message: `the transaction will be added in block [${BlockIndex}]`
-    });
+    else{
+        const BlockIndex = bitcoin.addTransactionToPendingTransactions(newTransaction);
+        res.status(200).json({
+            newTransaction,
+            message: `the transaction will be added in block [${BlockIndex}]`
+        });
+    }
 };
 
 exports.Mine = (req, res)=>{
@@ -40,12 +44,39 @@ exports.Mine = (req, res)=>{
     const nonce = bitcoin.proofOfWork(previousBlockHash, currentBlockData);
     const blockHash = bitcoin.hashBlock(previousBlockHash, currentBlockData, nonce);
     const newBlock = bitcoin.createNewBlock(nonce, previousBlockHash, blockHash);
-    const nodeAddress = uuid().split('-').join('');
-    bitcoin.createNewTransaction(6.25, '00', nodeAddress);
-    res.status(200).json({
+    const requests = [];
+    for(nodeUrl of bitcoin.networkNodes){
+        const options = {
+            uri : `${nodeUrl}/api/receive-new-block`,
+            method: 'POST',
+            body : {newBlock},
+            json : true
+        };
+        requests.push(rp(options));
+    }
+    Promise.all(requests)
+    .then(data=>{
+        const nodeAddress = uuid().split('-').join('');
+        const options = {
+            uri : `${bitcoin.currentNodeUrl}/api/transaction/broadcast`,
+            method: 'POST',
+            json: true,
+            body : {
+                amount: 6.25,
+                sender: '00',
+                recipient: nodeAddress
+            }
+        }
+        return rp(options);
+    })
+    .then(data=>res.status(200).json({
         message: "new Block mined ",
         newBlock
-    });
+    }))
+    .catch(err=>res.status(500).json({
+        message: "something wen't wrong!",
+        deatil: err.message
+    }));
 };
 
 
@@ -127,10 +158,55 @@ exports.RegisterNodeBulk = (req, res)=>{
             message: "Bulk registration successful."
         });
     }catch(err){
-        console.log(err);
         res.status(500).json({
             message: "something wen't wrong!",
             details: err.message
+        });
+    }
+};
+
+
+exports.TransactionBroadcast = (req, res)=>{
+    try{
+        const {amount, sender, recipient} = req.body;
+        const newTransaction = bitcoin.createNewTransaction(amount, sender, recipient);
+        console.log(newTransaction);
+        bitcoin.addTransactionToPendingTransactions(newTransaction);
+        const requests = [];
+        for(nodeUrl of bitcoin.networkNodes){
+            let options = {
+                uri : `${nodeUrl}/api/transaction`,
+                method : "POST",
+                json : true,
+                body : {newTransaction}
+            };
+            requests.push(rp(options));
+        }
+        Promise.all(requests)
+        .then(data=> res.status(200).json({ message: 'Transaction created and broadcast successfully.' }))
+        .catch(err=> res.status(404).json({ message: err.message}));
+    }catch(err){
+        res.status(500).json({
+            message: "something wen't wrong.",
+            details: err.message
+        });
+    }
+};
+
+
+exports.ReceiveBlock = (req, res)=>{
+    const {newBlock} = req.body;
+    const lastBlock = bitcoin.getLastBlock();
+    const correctHash = lastBlock.Hash === newBlock.previousBlockHash;
+    const correctIndex = (lastBlock['index'] + 1) === newBlock['index'];
+    if(correctIndex && correctHash){
+        bitcoin.chain.push(newBlock);
+        res.status(200).json({
+            message: "new Block was received."
+        });
+    }else{
+        res.status(500).json({
+            message: "newBlock can't be added"
         });
     }
 };

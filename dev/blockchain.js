@@ -1,4 +1,5 @@
-const crypto         = require("crypto-js")
+const crypto         = require("crypto-js"),
+      {v4 : uuid}    = require("uuid"),
       currentNodeUrl = process.argv[3];
 //class function of the blockchain
 function Blockchain(){
@@ -30,10 +31,15 @@ function Blockchain(){
     const newTransaction = {
         amount,
         sender,
-        recipient
+        recipient,
+        transactionId: uuid().split('-').join('')
     };
-    this.newTransactions.push(newTransaction);
-    return this.getLastBlock()['index'] + 1;
+    return newTransaction;
+ };
+
+ Blockchain.prototype.addTransactionToPendingTransactions = function(transactionObj){
+     this.newTransactions.push(transactionObj);
+     return this.getLastBlock()['index'] + 1;
  };
 
  Blockchain.prototype.hashBlock = function(previousBlockHash, currentBlockData, nonce){
