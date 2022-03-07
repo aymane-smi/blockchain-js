@@ -14,9 +14,9 @@ function Blockchain(){
          index : this.chain.length+1,
          timestamp: Date.now(),
          transactions: this.newTransactions,
-         nonce: nonce,
-         Hash: Hash,
-         previousBlockHash: previousBlockHash
+         nonce,
+         Hash,
+         previousBlockHash
      };
      this.newTransactions = [];
      this.chain.push(newBlock);
@@ -50,7 +50,6 @@ function Blockchain(){
 
 
  Blockchain.prototype.proofOfWork = function(previousBlockHash, currentBlockData){
-     const dataBlock = previousBlockHash + JSON.stringify(currentBlockData);
      let nonce = 0;
      let hash = this.hashBlock(previousBlockHash, currentBlockData, nonce);
      while(hash.substring(0, 4) !== '0000'){
@@ -58,6 +57,29 @@ function Blockchain(){
          hash = this.hashBlock(previousBlockHash, currentBlockData, nonce);
      }
      return nonce;
+ };
+
+ Blockchain.prototype.chainIsValid = function(blockchain){
+     let isValid = true;
+     for(let i = 1; i < blockchain.length ; i++){
+         let currentBlock = blockchain[i];
+         let prevBlock = blockchain[i-1];
+        console.log("previous=>", prevBlock['Hash']);
+        console.log("current=>", currentBlock['Hash']);
+         const BlockHash = this.hashBlock(prevBlock['Hash'], {transactions: currentBlock['transactions'], index: currentBlock['index']},currentBlock['nonce']);
+         if(BlockHash.substring(0, 4) !== '0000')
+            isValid = false;
+         if(currentBlock['previousBlockHash'] !== prevBlock['Hash'])
+            isValid = false;
+     }
+     const gensisBlock = blockchain[0];
+     const currentNonce = gensisBlock['nonce'] === 100;
+     const correctPreviousBlockHash = gensisBlock['previousBlockHash'] === '0';
+     const correctHash = gensisBlock['Hash'] === '0';
+     const correctTransactions = gensisBlock['transactions'].length === 0;
+     if(!currentNonce || !correctPreviousBlockHash || !correctHash || !correctTransactions)
+        isValid = false;
+     return isValid;
  };
 
 

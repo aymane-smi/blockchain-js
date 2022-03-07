@@ -32,15 +32,17 @@ exports.Transaction = (req, res)=>{
 };
 
 exports.Mine = (req, res)=>{
-    if(bitcoin.newTransactions.length <= 0)
-        res.status(401).json({
-            message: "can't be mined!"
-        });
+    // if(bitcoin.newTransactions.length <= 0)
+    //     res.status(401).json({
+    //         message: "can't be mined!"
+    //     });
     const previousBlockHash = bitcoin.getLastBlock().Hash;
     const currentBlockData = {
         transactions: bitcoin.newTransactions,
-        index: bitcoin.getLastBlock()+1
+        index: bitcoin.getLastBlock()['index']+1
     };
+    console.log("last block:", bitcoin.getLastBlock()+1);
+    console.log("currentBlockData:", currentBlockData);
     const nonce = bitcoin.proofOfWork(previousBlockHash, currentBlockData);
     const blockHash = bitcoin.hashBlock(previousBlockHash, currentBlockData, nonce);
     const newBlock = bitcoin.createNewBlock(nonce, previousBlockHash, blockHash);
@@ -209,4 +211,47 @@ exports.ReceiveBlock = (req, res)=>{
             message: "newBlock can't be added"
         });
     }
+};
+
+
+// exports.ValidChain = (req, res)=>{
+//     res.json({
+//         boolean: bitcoin.chainIsValid(bitcoin.chain)
+//     });
+// }
+
+exports.Consensus = (req, res)=>{
+    const requests = [];
+    for(nodeUrl of bitcoin.networkNodes){
+        const options = {
+            uri : `${nodeUrl}/api/blockchain`,
+            method: 'POST',
+            json: true
+        }
+        requests.push(rp(options));
+    }
+    Promise.all(requests)
+    .then(data=>{
+        const currentChainLength = bitcoin.chain.length;
+        const maxChainLength = currentChainLength;
+        const newLongestChain = null;
+        const newTransactions = null;
+        for(blockchain of data){
+            if(blockchain.chain.length > maxChainLength){
+                maxChainLength = blockchain.chain.length;
+                newLongestChain = blockchain.chain;
+                newTransactions = blockchain.newTransactions;
+            }
+        }
+        if(!newLongestChain || (newLongestChain && bitcoin.chainIsValid(newLongestChain)))
+            res.status(200).json({
+                message: "current chain has not been replaced.",
+                chain: bitcoin.chain
+            });
+        else
+            res.status(200).json({
+                message: "current chain has been replaced.",
+                chain: bitcoin.chain
+            });
+    })
 };
